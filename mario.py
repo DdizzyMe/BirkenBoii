@@ -8,12 +8,21 @@ pygame.init()
 
 pygame.display.set_caption("Birken Boiii")
 
+LEVEL_MAP = [
+'                                 X',
+'                          XX       X',
+'    X      XXX        X XX           X ',
+'                                XX',
+' X      XX  XXXX    XX  XXX   XX  XXX',
+'                                ',
+'   XX XX  XXXXX  XX  XX  X  X  ',
+'                               ']
 WIDTH, HEIGHT = 1000, 800
 FPS = 60
 PLAYER_VEL = 5
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-
+sound= join('assets','pokemon.mp3')
 
 def flip(sprites):
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
@@ -52,6 +61,10 @@ def get_block(size):
     surface.blit(image, (0, 0), rect)
     return pygame.transform.scale2x(surface)
 
+def load_sound(self):
+    bg_sound = pygame.mixer.Sound(sound)
+    bg_sound.set_volume(0.2)
+    bg_sound.play()
 
 class Player(pygame.sprite.Sprite):
     COLOR = (255, 0, 0)
@@ -275,27 +288,30 @@ def handle_move(player, objects):
     for obj in to_check:
         if obj and obj.name == "fire":
             player.make_hit()
-
-
+					
 def main(window):
     clock = pygame.time.Clock()
     background, bg_image = get_background("Blue.png")
-
+    load_sound(self=main)
     block_size = 96
 
-    player = Player(100, 100, 50, 50)
     fire = Fire(100, HEIGHT - block_size - 64, 16, 32)
     fire.on()
     floor = [Block(i * block_size, HEIGHT - block_size, block_size)
              for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
-    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
-               Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire,
-                 Block(block_size * 4,HEIGHT - block_size * 4, block_size), Block(block_size * 7, HEIGHT - block_size * 6, block_size),
-                 Block(block_size * 7, HEIGHT - block_size * 4, block_size)]
-
+    level_draw = []
+    def setup_level(self):
+        for row_index,row in enumerate(LEVEL_MAP):
+            for col_index,col in enumerate(row):
+                x = col_index * block_size
+                y = row_index * block_size
+                if col == 'X':
+                    level_draw.append(Block(x,y,block_size))
+    setup_level(self=main)
+    objects = [*floor, *level_draw]
+    player=Player(100,100,50,50)
     offset_x = 0
     scroll_area_width = 200
-
     run = True
     while run:
         clock.tick(FPS)
@@ -312,9 +328,8 @@ def main(window):
         player.loop(FPS)
         fire.loop()
         handle_move(player, objects)
-        draw(window, background, bg_image, player, objects, offset_x)
-
-        if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
+        draw(window, background, bg_image, player,objects,offset_x)
+        if((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
                 (player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
             offset_x += player.x_vel
 
